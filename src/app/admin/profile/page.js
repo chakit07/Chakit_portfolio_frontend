@@ -16,6 +16,7 @@ export default function AdminProfilePage() {
 
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [logoImageUploading, setLogoImageUploading] = useState(false);
+  const [adminLogoUploading, setAdminLogoUploading] = useState(false);
 
   const [profile, setProfile] = useState({
     name: '',
@@ -28,6 +29,8 @@ export default function AdminProfilePage() {
     profileImage: '',
     logoText: '',
     logoImage: '',
+    adminTitle: 'Admin Console',
+    adminLogoImage: '',
     roles: [],
     stats: [],
     resumeUrl: '',
@@ -126,6 +129,9 @@ export default function AdminProfilePage() {
     try {
       await api.updateSettings({ profile, footer });
       toast.success('Profile and site content updated successfully!');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-settings-updated', { detail: { profile, footer } }));
+      }
     } catch (err) {
       toast.error(err.message || 'Failed to update settings.');
     } finally {
@@ -268,6 +274,37 @@ export default function AdminProfilePage() {
                 value={profile.title || ''}
                 onChange={(e) => setProfile({ ...profile, title: e.target.value })}
               />
+            </div>
+
+            {/* Profile Portrait / Avatar Photo */}
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Profile Photo / Portrait (Used as Admin Avatar & Public Avatar)
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Input
+                  placeholder="/uploads/avatar.png or https://..."
+                  value={profile.profileImage || ''}
+                  onChange={(e) => setProfile({ ...profile, profileImage: e.target.value })}
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+                <input id="profile-image-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={makeImageUploadHandler('profileImage', setProfileImageUploading)} />
+                <button type="button" title="Upload profile photo" disabled={profileImageUploading}
+                  onClick={() => document.getElementById('profile-image-file').click()}
+                  style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: profileImageUploading ? 'var(--muted)' : 'transparent', color: profileImageUploading ? 'var(--muted-foreground)' : 'var(--foreground)', fontSize: 12, fontWeight: 500, cursor: profileImageUploading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                  onMouseEnter={e => { if (!profileImageUploading) e.currentTarget.style.background = 'var(--muted)'; }}
+                  onMouseLeave={e => { if (!profileImageUploading) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {profileImageUploading ? <><span style={{ width: 13, height: 13, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Uploading…</> : <><Upload size={13} />Upload Photo</>}
+                </button>
+              </div>
+              {profile.profileImage && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <img src={getMediaUrl(profile.profileImage)} alt="Profile preview" onError={e => { e.currentTarget.style.display = 'none'; }} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 9999, border: '2px solid var(--primary)' }} />
+                  <span style={{ fontSize: 11, color: 'var(--muted-foreground)', wordBreak: 'break-all' }}>{profile.profileImage}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -421,6 +458,74 @@ export default function AdminProfilePage() {
                 onChange={(val) => setProfile({ ...profile, resumeButtonVisible: val })}
                 label="Show Resume Download Buttons on Site"
               />
+            </div>
+          </div>
+
+          {/* Admin Console Header Customization */}
+          <div className="pt-4 border-t border-border/50">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span>Admin Console Sidebar Branding (Logo & Dynamic Title)</span>
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Customize the logo image and brand title text displayed at the top of your Admin Console sidebar.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Admin Header Dynamic Title Text
+                </label>
+                <Input
+                  placeholder="e.g. Admin Console or My Portfolio HQ"
+                  value={profile.adminTitle || ''}
+                  onChange={(e) => setProfile({ ...profile, adminTitle: e.target.value })}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Leave blank or customize with your name/title. Defaults to Admin Console.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Admin Logo Photo (Uses your Profile Photo by default)
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Input
+                    placeholder="Defaults to your profile photo"
+                    value={profile.adminLogoImage || ''}
+                    onChange={(e) => setProfile({ ...profile, adminLogoImage: e.target.value })}
+                    style={{ flex: 1, minWidth: 0 }}
+                  />
+                  <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+                  <input id="admin-logo-image-file" type="file" accept="image/*" style={{ display: 'none' }} onChange={makeImageUploadHandler('adminLogoImage', setAdminLogoUploading)} />
+                  <button type="button" title="Upload custom photo or logo for admin" disabled={adminLogoUploading}
+                    onClick={() => document.getElementById('admin-logo-image-file').click()}
+                    style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: adminLogoUploading ? 'var(--muted)' : 'transparent', color: adminLogoUploading ? 'var(--muted-foreground)' : 'var(--foreground)', fontSize: 12, fontWeight: 500, cursor: adminLogoUploading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                    onMouseEnter={e => { if (!adminLogoUploading) e.currentTarget.style.background = 'var(--muted)'; }}
+                    onMouseLeave={e => { if (!adminLogoUploading) e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    {adminLogoUploading ? <><span style={{ width: 13, height: 13, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Uploading…</> : <><Upload size={13} />Upload</>}
+                  </button>
+                </div>
+                {(profile.adminLogoImage || profile.profileImage || profile.logoImage) && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img
+                      src={getMediaUrl(profile.adminLogoImage || profile.profileImage || profile.logoImage)}
+                      alt="Admin logo preview"
+                      onError={e => { e.currentTarget.style.display = 'none'; }}
+                      style={{ width: 34, height: 34, objectFit: 'cover', borderRadius: 9999, border: '2px solid var(--primary)' }}
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--muted-foreground)' }}>
+                      Active header avatar: {profile.adminLogoImage ? 'Custom Admin Photo' : profile.profileImage ? 'Using Profile Photo' : 'Using Brand Logo'}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -644,14 +749,30 @@ export default function AdminProfilePage() {
                   <Input
                     placeholder="Platform (GitHub, etc.)"
                     value={social.platform}
-                    onChange={(e) => updateSocial(social._id, { platform: e.target.value })}
+                    onChange={(e) =>
+                      setSocialLinks(socialLinks.map((s) =>
+                        s._id === social._id ? { ...s, platform: e.target.value } : s
+                      ))
+                    }
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val) updateSocial(social._id, { platform: val });
+                    }}
                   />
                 </div>
                 <div className="sm:col-span-5">
                   <Input
                     placeholder="URL (https://...)"
                     value={social.url}
-                    onChange={(e) => updateSocial(social._id, { url: e.target.value })}
+                    onChange={(e) =>
+                      setSocialLinks(socialLinks.map((s) =>
+                        s._id === social._id ? { ...s, url: e.target.value } : s
+                      ))
+                    }
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val) updateSocial(social._id, { url: val });
+                    }}
                   />
                 </div>
                 <div className="sm:col-span-3 flex items-center gap-2">

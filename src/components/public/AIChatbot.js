@@ -19,8 +19,8 @@ import { useToast } from '@/components/ui/Toast';
 
 const SUGGESTED_QUESTIONS = [
   'What are your top projects?',
-  'Why should we hire Chakit?',
-  'How do I get in touch for a project?'
+  'What is your experience with Next.js and MongoDB?',
+  'Why should we hire Chakit?'
 ];
 
 export default function AIChatbot() {

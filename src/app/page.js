@@ -13,11 +13,13 @@ import Footer from '@/components/public/Footer';
 import { api } from '@/lib/api';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { useTheme } from '@/lib/theme-provider';
 
 export default function HomePage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { setBackgroundPreset, setAccentColor, setAnimationSpeed } = useTheme();
 
   const fetchPortfolio = async () => {
     setLoading(true);
@@ -39,6 +41,18 @@ export default function HomePage() {
   useEffect(() => {
     fetchPortfolio();
   }, []);
+
+  useEffect(() => {
+    if (data?.settings?.visualEffects) {
+      const vfx = data.settings.visualEffects;
+      // Always sync from DB so admin changes are reflected immediately
+      if (vfx.backgroundPreset) setBackgroundPreset(vfx.backgroundPreset);
+      if (vfx.intensity) setAnimationSpeed(vfx.intensity);
+    }
+    if (data?.settings?.appearance?.accentColor) {
+      setAccentColor(data.settings.appearance.accentColor);
+    }
+  }, [data, setBackgroundPreset, setAccentColor, setAnimationSpeed]);
 
   if (loading && !data) {
     return (
@@ -125,7 +139,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-transparent text-foreground">
       {/* Top Navigation */}
       <Navbar settings={settings} sections={configuredSections} />
 

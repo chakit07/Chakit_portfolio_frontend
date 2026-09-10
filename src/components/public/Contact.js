@@ -50,7 +50,6 @@ export default function Contact({ settings, socialLinks = [] }) {
 
     setErrors({});
     setIsSubmitting(true);
-    setSubmitStatus(null);
 
     try {
       const res = await api.submitContact(formData);

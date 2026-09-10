@@ -89,7 +89,8 @@ export default function AdminMessagesPage() {
     if (!msg.isRead) {
       try {
         await api.markMessageRead(msg._id, true);
-        setMessages(messages.map((m) => (m._id === msg._id ? { ...m, isRead: true } : m)));
+        setMessages((prev) => prev.map((m) => (m._id === msg._id ? { ...m, isRead: true } : m)));
+        setActiveMessage({ ...msg, isRead: true });
       } catch (err) {
         console.error('Could not mark read:', err);
       }
@@ -97,24 +98,38 @@ export default function AdminMessagesPage() {
   };
 
   const toggleReadStatus = async (msg, e) => {
-    e.stopPropagation();
+    if (e?.stopPropagation) e.stopPropagation();
     try {
       const nextRead = !msg.isRead;
       await api.markMessageRead(msg._id, nextRead);
-      setMessages(messages.map((m) => (m._id === msg._id ? { ...m, isRead: nextRead } : m)));
+      setMessages((prev) => prev.map((m) => (m._id === msg._id ? { ...m, isRead: nextRead } : m)));
       if (activeMessage && activeMessage._id === msg._id) {
-        setActiveMessage({ ...activeMessage, isRead: nextRead });
+        setActiveMessage((prev) => (prev ? { ...prev, isRead: nextRead } : null));
       }
+      toast.success(nextRead ? 'Marked as read' : 'Marked as unread');
     } catch (err) {
       toast.error('Failed to update read status.');
     }
   };
 
+  const handleMarkAllRead = async () => {
+    try {
+      await api.markAllMessagesRead();
+      setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })));
+      if (activeMessage) {
+        setActiveMessage((prev) => (prev ? { ...prev, isRead: true } : null));
+      }
+      toast.success('All messages marked as read.');
+    } catch (err) {
+      toast.error('Failed to mark all as read.');
+    }
+  };
+
   const handleToggleArchive = async (msg, e) => {
-    if (e) e.stopPropagation();
+    if (e?.stopPropagation) e.stopPropagation();
     try {
       await api.toggleArchiveMessage(msg._id);
-      setMessages(messages.filter((m) => m._id !== msg._id));
+      setMessages((prev) => prev.filter((m) => m._id !== msg._id));
       if (activeMessage && activeMessage._id === msg._id) {
         setActiveMessage(null);
       }
@@ -127,7 +142,7 @@ export default function AdminMessagesPage() {
     if (!itemToDelete) return;
     try {
       await api.deleteMessage(itemToDelete._id);
-      setMessages(messages.filter((m) => m._id !== itemToDelete._id));
+      setMessages((prev) => prev.filter((m) => m._id !== itemToDelete._id));
       setDeleteConfirmOpen(false);
       setItemToDelete(null);
       if (activeMessage && activeMessage._id === itemToDelete._id) {
@@ -138,17 +153,40 @@ export default function AdminMessagesPage() {
     }
   };
 
+  const unreadCount = messages.filter((m) => !m.isRead).length;
+
   return (
     <div className="space-y-8">
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          Contact Inbox
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Review inbound messages, inquiries from the portfolio contact form, and reply by email.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+              Contact Inbox
+            </h1>
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                {unreadCount} unread
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Review inbound messages, inquiries from the portfolio contact form, and reply by email.
+          </p>
+        </div>
+
+        {unreadCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleMarkAllRead}
+            className="self-start sm:self-auto gap-2 text-xs hover:bg-secondary"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Mark all as read</span>
+          </Button>
+        )}
       </div>
 
       {/* Filter Tabs & Search */}
@@ -241,6 +279,23 @@ export default function AdminMessagesPage() {
                   <span className="text-xs text-muted-foreground font-mono">
                     {formatDate(msg.createdAt)}
                   </span>
+
+                  <button
+                    type="button"
+                    onClick={(e) => toggleReadStatus(msg, e)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      msg.isRead
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+                        : 'text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10'
+                    }`}
+                    title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
+                  >
+                    {msg.isRead ? (
+                      <Mail className="h-4 w-4" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4" />
+                    )}
+                  </button>
 
                   <a
                     href={`mailto:${msg.email}?subject=${encodeURIComponent(`Re: ${msg.subject}`)}`}
@@ -392,7 +447,27 @@ export default function AdminMessagesPage() {
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-border">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleReadStatus(activeMessage, { stopPropagation: () => {} })}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  {activeMessage.isRead ? (
+                    <>
+                      <Mail className="h-3.5 w-3.5" />
+                      <span>Mark as Unread</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      <span>Mark as Read</span>
+                    </>
+                  )}
+                </button>
+
+                <span className="text-border/60 select-none">·</span>
+
                 <button
                   type="button"
                   onClick={() => handleToggleArchive(activeMessage)}

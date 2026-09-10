@@ -46,7 +46,14 @@ export default function EducationCertifications({ education = [], certifications
                     <div className="p-6 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-primary/40 transition-all">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <h4 className="text-lg font-bold text-foreground">{edu.degree}</h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-lg font-bold text-foreground">{edu.degree}</h4>
+                            {edu.grade && (
+                              <Badge variant="secondary" className="font-mono text-xs font-semibold text-primary bg-primary/10 border-primary/20">
+                                {edu.grade}
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-primary font-medium text-sm mt-0.5">{edu.institution}</p>
                           {edu.field && (
                             <p className="text-xs text-muted-foreground mt-0.5">{edu.field}</p>
@@ -80,31 +87,33 @@ export default function EducationCertifications({ education = [], certifications
                 <h3 className="text-xl font-bold text-foreground">Certifications & Licenses</h3>
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {certifications.map((cert, idx) => (
                   <CardTilt key={cert._id || idx} maxTilt={5}>
-                    <div className="p-6 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-accent/40 transition-all">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <h4 className="text-lg font-bold text-foreground">{cert.name}</h4>
-                          <p className="text-accent font-medium text-sm mt-0.5">{cert.issuer}</p>
+                    <div className="h-full p-4 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-sm hover:shadow-md hover:border-accent/40 transition-all flex flex-col justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+                          <h4 className="text-sm font-bold text-foreground leading-snug flex-1">{cert.name}</h4>
+                          {cert.issueDate && (
+                            <Badge variant="secondary" className="font-mono text-[10px] shrink-0">
+                              {cert.issueDate}
+                            </Badge>
+                          )}
                         </div>
-
-                        <Badge variant="secondary" className="font-mono text-xs">
-                          {cert.issueDate}
-                        </Badge>
+                        {cert.issuer && (
+                          <p className="text-accent font-medium text-xs mt-0.5">{cert.issuer}</p>
+                        )}
+                        {cert.credentialId && (
+                          <p className="mt-1.5 text-[10px] font-mono text-muted-foreground truncate">
+                            ID: {cert.credentialId}
+                          </p>
+                        )}
                       </div>
 
-                      {cert.credentialId && (
-                        <p className="mt-2 text-xs font-mono text-muted-foreground">
-                          Credential ID: {cert.credentialId}
-                        </p>
-                      )}
-
-                      <div className="mt-4 flex items-center justify-between pt-2 border-t border-border/40">
-                        <span className="text-xs text-emerald-500 font-medium flex items-center gap-1">
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          <span>Verified Credential</span>
+                      <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                        <span className="text-[11px] text-emerald-500 font-medium flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Verified</span>
                         </span>
 
                         {cert.credentialUrl && (
@@ -112,10 +121,10 @@ export default function EducationCertifications({ education = [], certifications
                             href={cert.credentialUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
                           >
-                            <span>Verify credential</span>
-                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span>View</span>
+                            <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                       </div>

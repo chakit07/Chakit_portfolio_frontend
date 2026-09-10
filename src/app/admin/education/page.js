@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Dialog from '@/components/ui/Dialog';
+import Badge from '@/components/ui/Badge';
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, GraduationCap } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
@@ -24,7 +25,8 @@ export default function AdminEducationPage() {
     field: '',
     startDate: '',
     endDate: '',
-    description: ''
+    description: '',
+    grade: ''
   });
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -56,7 +58,8 @@ export default function AdminEducationPage() {
       field: '',
       startDate: '',
       endDate: '',
-      description: ''
+      description: '',
+      grade: ''
     });
     setModalOpen(true);
   };
@@ -70,7 +73,8 @@ export default function AdminEducationPage() {
       field: edu.field || '',
       startDate: edu.startDate || '',
       endDate: edu.endDate || '',
-      description: edu.description || ''
+      description: edu.description || '',
+      grade: edu.grade || ''
     });
     setModalOpen(true);
   };
@@ -192,9 +196,16 @@ export default function AdminEducationPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-base font-bold text-foreground">
-                      {item.degree}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-bold text-foreground">
+                        {item.degree}
+                      </h3>
+                      {item.grade && (
+                        <Badge variant="secondary" className="text-xs font-semibold text-primary bg-primary/10 border-primary/20">
+                          {item.grade}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-primary mt-0.5">
                       {item.institution} {item.field && `• ${item.field}`}
                     </p>
@@ -299,6 +310,17 @@ export default function AdminEducationPage() {
                 placeholder="e.g. 2020"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Percentage / CGPA / Grade (Optional)
+            </label>
+            <Input
+              value={formData.grade}
+              onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+              placeholder="e.g. 8.5 CGPA or 85% or First Class with Distinction"
+            />
           </div>
 
           <div>

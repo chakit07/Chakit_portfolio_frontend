@@ -6,43 +6,177 @@ All source files are strictly written in **JavaScript (`.js` files)** with JSX e
 
 ---
 
+## Complete Website Architecture & Sitemap Chart
+
+```mermaid
+graph TD
+    classDef client fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc;
+    classDef public fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc;
+    classDef admin fill:#1e1e38,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc;
+    classDef backend fill:#0c1322,stroke:#f59e0b,stroke-width:2px,color:#f8fafc;
+    classDef external fill:#1f2937,stroke:#ec4899,stroke-width:2px,color:#f8fafc;
+
+    User["🌐 Visitor / Recruiter"]:::client
+    AdminUser["🔐 Site Administrator"]:::client
+
+    subgraph Frontend["🖥️ Next.js 14 Frontend Application (port 3000)"]
+        subgraph PublicPages["Public Website Layer (/)"]
+            Home["🏠 / (Home Page)"]:::public
+            HeroSec["✨ 3D Hero & Three.js Canvas"]:::public
+            AboutSec["👤 About & Bio"]:::public
+            SkillsSec["⚡ Skills & Tech Stack"]:::public
+            ExpSec["💼 Work Experience Timeline"]:::public
+            ProjectsSec["🚀 Featured Projects Grid"]:::public
+            EduSec["🎓 Education & Certifications (with CGPA)"]:::public
+            ContactSec["📬 Contact Form (Nodemailer Trigger)"]:::public
+            ProjectDetail["📄 /projects/[slug] (Case Study & AI Lens)"]:::public
+            AITwin["🤖 Chakit's AI Twin Chatbot"]:::public
+            JobMatcher["🎯 AI Recruiter Job-Fit Matcher"]:::public
+            FaviconHead["🎨 Dynamic Favicon Manager"]:::public
+        end
+
+        subgraph AdminPages["Admin Console Layer (/admin)"]
+            AdminLogin["🔑 /admin/login (Session Auth Shell)"]:::admin
+            AdminDashboard["📊 /admin (Overview & Real Metrics)"]:::admin
+            AdminProfile["👤 /admin/profile (Bio, Roles, Photo & Title)"]:::admin
+            AdminProjects["📁 /admin/projects (CRUD & AI Copilot)"]:::admin
+            AdminSkills["🛠️ /admin/skills (Tech Stack & Categories)"]:::admin
+            AdminExp["💼 /admin/experience (Career Timeline)"]:::admin
+            AdminEdu["🎓 /admin/education (Degrees & Percentage/CGPA)"]:::admin
+            AdminCerts["🏆 /admin/certifications (Credentials)"]:::admin
+            AdminMedia["🖼️ /admin/media (Multer Storage & Protection)"]:::admin
+            AdminMessages["📥 /admin/messages (Inbox & AI 1-Click Reply)"]:::admin
+            AdminSettings["⚙️ /admin/settings (4-Box 3D & Favicon Uploader)"]:::admin
+            AdminSecurity["🛡️ /admin/account (Security & Password Reset)"]:::admin
+        end
+    end
+
+    subgraph BackendAPI["⚙️ Express.js REST API (port 5000 /api/v1)"]
+        PublicAPI["/public/portfolio & /public/contact"]:::backend
+        AuthAPI["/auth/login, /auth/me, /auth/csrf"]:::backend
+        CRUDAPI["/projects, /skills, /experience, /education, /settings"]:::backend
+        AIService["AI Service Controller (Gemini 3.6 Flash)"]:::backend
+        EmailService["Nodemailer Notification Service"]:::backend
+        UploadService["Multer Upload & File Protection Service"]:::backend
+    end
+
+    subgraph ExternalServices["☁️ External Cloud Services & Storage"]
+        MongoDB[("🍃 MongoDB Database (Atlas / Local)")]:::external
+        GeminiAI["✨ Google Gemini 3.6 Flash"]:::external
+        SMTP["📧 SMTP Server (Gmail / Nodemailer)"]:::external
+        LocalStorage["📁 backend/uploads/ Storage"]:::external
+    end
+
+    %% Visitor flows
+    User --> Home
+    User --> ProjectDetail
+    User --> AITwin
+    User --> JobMatcher
+    Home --> ContactSec
+
+    %% Admin flows
+    AdminUser --> AdminLogin
+    AdminLogin --> AdminDashboard
+    AdminDashboard --> AdminProfile
+    AdminDashboard --> AdminProjects
+    AdminDashboard --> AdminSettings
+    AdminDashboard --> AdminMessages
+
+    %% Frontend to Backend flows
+    PublicPages --> PublicAPI
+    AITwin --> AIService
+    JobMatcher --> AIService
+    ContactSec --> PublicAPI
+    AdminPages --> AuthAPI
+    AdminPages --> CRUDAPI
+    AdminSettings --> CRUDAPI
+    AdminMedia --> UploadService
+
+    %% Backend to External flows
+    CRUDAPI --> MongoDB
+    PublicAPI --> MongoDB
+    PublicAPI --> EmailService
+    EmailService --> SMTP
+    AIService --> GeminiAI
+    UploadService --> LocalStorage
+```
+
+---
+
+## Data Flow & Event Lifecycle Chart
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Visitor as 🌐 Visitor / Recruiter
+    participant Frontend as 🖥️ Next.js Web App
+    participant API as ⚙️ Express Backend API
+    participant DB as 🍃 MongoDB
+    participant AI as ✨ Google Gemini 3.6
+    participant Mail as 📧 Nodemailer Service
+
+    %% Flow 1: AI Chatbot Query
+    Note over Visitor,AI: 1. AI Twin Interactive Chatbot Flow
+    Visitor->>Frontend: Asks question ("What is your Next.js and MongoDB experience?")
+    Frontend->>API: POST /api/v1/ai/chat
+    API->>DB: Pull ground-truth candidate background & projects
+    API->>AI: Generate factual response with Gemini 3.6 Flash
+    AI-->>API: Stream contextualized reply
+    API-->>Frontend: 200 OK with AI response
+    Frontend-->>Visitor: Displays grounded answer in chatbot widget
+
+    %% Flow 2: Contact Form & Nodemailer Notification
+    Note over Visitor,Mail: 2. Contact Inquiry & Automated Email Notification Flow
+    Visitor->>Frontend: Fills and submits Contact Form
+    Frontend->>API: POST /api/v1/public/contact (Honeypot & Rate-Limited)
+    API->>DB: Save inquiry to ContactMessages collection
+    API->>Mail: Trigger emailService.sendContactNotification()
+    Mail-->>Visitor: HTML alert email dispatched to owner inbox in real-time
+    API-->>Frontend: 201 Created confirmation
+    Frontend-->>Visitor: Success state & smart feedback
+
+    %% Flow 3: Real-Time Dynamic Branding & Settings
+    Note over Visitor,DB: 3. Admin Dynamic Branding & 3D Settings Flow
+    Visitor->>Frontend: Admin changes title, photo avatar, or 3D preset
+    Frontend->>API: PUT /api/v1/settings
+    API->>DB: Persist updated branding & visualEffects
+    Frontend->>Frontend: Dispatch 'admin-settings-updated' DOM event
+    Frontend-->>Visitor: Sidebar logo, title, and tab favicon update immediately
+```
+
+---
+
 ## Features
 
 ### Public Portfolio
-- **Floating AI Portfolio Assistant ("Chakit's AI Twin")**: Grounded conversational widget powered by Google Gemini and live MongoDB records. Answers visitor and recruiter inquiries about skills, projects, and career background with factual precision.
-- **AI Recruiter Role Fit Matcher**: Recruiter tool that parses job descriptions/requirements, calculates candidate compatibility percentage, lists direct skill matches vs. ramp-up areas, and recommends relevant projects to review.
+- **Automated Nodemailer Inquiries**: Submitting the contact form immediately notifies the portfolio owner via clean, responsive HTML email with instant sender details and a direct reply action.
+- **Floating AI Portfolio Assistant ("Chakit's AI Twin")**: Grounded conversational widget powered by Google Gemini 3.6 Flash and live MongoDB records. Answers inquiries about full-stack experience, Next.js, MongoDB, Kiddocracy, REST APIs, and career background.
+- **AI Recruiter Role Fit Matcher**: Recruiter tool that parses job descriptions, calculates candidate compatibility percentage, lists direct skill matches vs. ramp-up areas, and recommends relevant projects to review.
 - **AI Case Study Perspectives Lens**: Multi-perspective summary generator on `/projects/[slug]` with 1-click modes: *Recruiter 30s TL;DR*, *Tech Lead Deep-Dive*, and *Non-Tech Layman Analogy*.
-- **Smart Contact Inquiry Feedback**: Instant feedback tailored to visitor message intent (career opportunity vs. freelance project).
-- **3D Interactive Hero Canvas**: Powered by Three.js with `@react-three/fiber` and `@react-three/drei`. Features 3 configurable presets (Floating 3D Laptop, Abstract Geometry, Orbital Particles), mouse parallax, FPS caps, viewport intersection pause, and reduced-motion fallback.
-- **Card 3D Hover Tilt**: Accessible CSS 3D perspective hover effects disabled on touch devices or when user prefers reduced motion.
-- **Dynamic Section Ordering**: All sections can be reordered, hidden, or shown directly from the Admin Dashboard with instant effect without rebuilding.
+- **Education & Academic Scores**: Dedicated percentage, CGPA, and grade displays on education credentials.
+- **3D Interactive Hero Canvas**: Powered by Three.js with `@react-three/fiber` and `@react-three/drei`. Features configurable presets (Floating 3D Laptop, Abstract Geometry, Orbital Particles), mouse parallax, FPS caps, and reduced-motion fallback.
+- **Dynamic Favicon Engine**: Automatically displays custom uploaded favicons, portraits, or branded SVG icons in the browser tab with real-time cache busting.
+- **Card 3D Hover Tilt**: Accessible CSS 3D perspective hover effects.
+- **Dynamic Section Ordering**: All sections can be reordered, hidden, or shown directly from the Admin Dashboard.
 - **Projects & Case Studies**: Categorized grid with technology tags, live demo & GitHub repo links, featured badges, and dedicated case study pages (`/projects/[slug]`).
 - **Draft & Visibility Control**: Draft projects and hidden skills/socials are strictly excluded from public APIs and sitemaps.
-- **Anti-Spam Contact Form**: Contact form with server-side validation, rate limiting, and an anti-spam honeypot field. Submissions persist to MongoDB and alert the admin.
+- **Anti-Spam Contact Form**: Server-side validation, rate limiting, and an anti-spam honeypot field.
 - **Dark/Light Theme**: Persistent theme switching with custom accent colors.
 
 ### Admin Dashboard (`/admin`)
-- **AI Case Study & Feature Copilot**: 1-click generation of project summary, description, architecture, challenges, and solutions from a project title or notes.
-- **AI 1-Click Smart Email Reply**: Detects message intent (Hiring, Freelance, Collaboration) and priority, then drafts a tailored email response ready for review and email sending.
-- **AI Bio & Tagline Polish**: Rewrites and elevates hero headlines and developer bio into punchy elevator pitches.
-- **Secure Authentication**: Server-managed sessions stored in MongoDB with HttpOnly, SameSite cookies, CSRF token validation, and rate limiting. No public registration.
-- **Real Database Counts**: Authentic metrics for projects, skills, experience, certifications, and unread inquiries—no fabricated numbers.
-- **Profile & Content Management**: Edit hero headlines, animated roles, statistics, resume, and footer text.
-- **Full CRUD Management**:
-  - Projects & project categories (slugs, case study writeups, features, challenges, solutions, thumbnail, status).
-  - Skills & skill categories (proficiency, custom order, visibility).
-  - Experience timeline (ongoing positions, achievement bullets, location).
-  - Education & certifications (credentials, issuer, verification links).
-  - Social links.
-- **Persistent Reordering**: Accessible up/down reorder controls that instantly update MongoDB order indices.
-- **Media Manager (Multer)**:
-  - Upload images and resume PDFs directly to backend storage.
-  - Server-side MIME validation and 10MB file size limit.
-  - Copy URL for easy embedding.
-  - **Deletion Protection**: Automatically checks published projects, certifications, and settings before deleting media—blocks deletion and displays exact locations if the file is in use.
-- **Contact Inbox**: Read, unread, archive, search, delete, and "Reply by email" mailto action.
-- **Visual Effects Settings Panel**: Enable/disable 3D hero, choose scene presets, customize accent colors, adjust animation intensity slider, toggle particles and tilt, and set static fallback images.
-- **Account Security**: Change admin password with current password verification; automatically invalidates all existing sessions.
+- **Dynamic Sidebar Branding**: Uses your uploaded photo as the logo/avatar with a glowing border ring, and allows setting custom dynamic title text with real-time DOM synchronization.
+- **Modular 4-Box Visual Effects & 3D Console**:
+  - *Box 1*: 3D Hero Scene Preset Selector (Laptop, Abstract Geometry, Orbital Particles, Cyber Mesh).
+  - *Box 2*: 3D Visual Effects & Scene Controls (intensity, particles, tilt, mobile rendering).
+  - *Box 3*: Ambient Background Effects (Constellation, Starfield, Floating Orbs, Cyber Grid).
+  - *Box 4*: Hero Photo & Framing Style (portrait photo uploader, glowing gradient, cyber neon, glass card, conic spin, blob outline, border radius, and accent color pickers).
+- **Favicon Uploader & Live Preview**: 1-click upload with instant auto-save to MongoDB and tab icon refresh.
+- **AI Case Study & Feature Copilot**: 1-click generation of project summary, description, architecture, challenges, and solutions.
+- **AI 1-Click Smart Email Reply**: Detects message intent (Hiring, Freelance, Collaboration) and drafts tailored email responses.
+- **AI Bio & Tagline Polish**: Rewrites hero headlines and developer bio into punchy elevator pitches.
+- **Secure Authentication**: Server-managed sessions stored in MongoDB with HttpOnly, SameSite cookies, and CSRF token validation.
+- **Full CRUD Management**: Projects, skills, work experience, education (with percentage/CGPA), certifications, and social links.
+- **Media Manager (Multer)**: Upload images and PDFs with MIME validation, 10MB limits, and automated deletion protection against active references.
 
 ---
 
@@ -128,7 +262,12 @@ COOKIE_DOMAIN=localhost
 UPLOAD_DIR=uploads
 MAX_FILE_SIZE_MB=10
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
+
+# Email Notification Settings (Nodemailer)
+EMAIL_SERVICE=gmail
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_16_character_google_app_password
 ```
 
 > **Note on AI Features**: If `GEMINI_API_KEY` is left blank, the portfolio automatically engages intelligent heuristic fallbacks based on real MongoDB records, ensuring zero crashes or broken UI for recruiters or visitors.

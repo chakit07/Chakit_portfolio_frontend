@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import { ThemeProvider } from '@/lib/theme-provider';
 import AIChatbot from '@/components/public/AIChatbot';
+import FaviconHead from '@/components/public/FaviconHead';
 import { ToastProvider } from '@/components/ui/Toast';
 import dynamic from 'next/dynamic';
 
@@ -24,9 +25,10 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className="min-h-screen text-foreground selection:bg-primary/20 selection:text-primary">
-        {/* Animated background canvas — fixed, behind all content */}
-        <BackgroundCanvas />
-        <ThemeProvider defaultTheme="dark" defaultAccent="#3b82f6">
+        <FaviconHead />
+        <ThemeProvider defaultTheme="dark" defaultAccent="#3b82f6" defaultBgPreset="constellation">
+          {/* Animated 3D background canvas — fixed, behind all content */}
+          <BackgroundCanvas />
           <ToastProvider>
             <div style={{ position: 'relative', zIndex: 1 }}>
               {children}

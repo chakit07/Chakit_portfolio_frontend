@@ -176,6 +176,7 @@ export const api = {
   // Messages
   getMessages: (params = '') => request(`/messages${params ? `?${params}` : ''}`),
   markMessageRead: (id, isRead) => request(`/messages/${id}/read`, { method: 'PATCH', body: { isRead } }),
+  markAllMessagesRead: () => request('/messages/mark-all-read', { method: 'PATCH' }),
   toggleArchiveMessage: (id) => request(`/messages/${id}/archive`, { method: 'PATCH' }),
   deleteMessage: (id) => request(`/messages/${id}`, { method: 'DELETE' }),
 

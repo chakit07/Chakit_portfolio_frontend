@@ -17,7 +17,9 @@ import {
   Palette,
   Globe,
   Upload,
-  Trash2
+  Trash2,
+  Layers,
+  Camera
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
 
@@ -29,6 +31,7 @@ export default function AdminSettingsPage() {
   const [fallbackImageUploading, setFallbackImageUploading] = useState(false);
   const [hologramImageUploading, setHologramImageUploading] = useState(false);
   const [ogImageUploading, setOgImageUploading] = useState(false);
+  const [faviconUploading, setFaviconUploading] = useState(false);
 
   const [seo, setSeo] = useState({
     siteTitle: '',
@@ -53,6 +56,7 @@ export default function AdminSettingsPage() {
     enableOnMobile: false,
     fallbackImage: '',
     hologramImage: '',
+    backgroundPreset: 'constellation',
     imageBorderEffect: 'glow-gradient',
     borderColor: '',
     borderWidth: 2,
@@ -101,6 +105,31 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleFaviconUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFaviconUploading(true);
+    try {
+      const res = await api.uploadMedia(file);
+      if (res?.data?.url) {
+        const newFavicon = res.data.url;
+        const updatedSeo = { ...seo, favicon: newFavicon };
+        setSeo(updatedSeo);
+        // Auto-save immediately to database so favicon applies right away
+        await api.updateSettings({ seo: updatedSeo });
+        toast.success('Favicon uploaded & applied to browser tab!');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('admin-settings-updated', { detail: { seo: updatedSeo } }));
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || 'Favicon upload failed.');
+    } finally {
+      setFaviconUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSaveAll = async (e) => {
     if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
@@ -120,6 +149,9 @@ export default function AdminSettingsPage() {
     try {
       await api.updateSettings(payload);
       toast.success('Settings saved successfully!');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-settings-updated', { detail: payload }));
+      }
     } catch (err) {
       const errMsg = (err.data?.errors && err.data.errors.join(', ')) || err.message || 'Failed to update settings.';
       toast.error(errMsg);
@@ -171,6 +203,15 @@ export default function AdminSettingsPage() {
     { id: 'hologram', name: '3D Photo Hologram', desc: 'Interactive 3D depth badge featuring your uploaded portrait with glowing aura and parallax tilt' }
   ];
 
+  const backgroundPresets = [
+    { id: 'constellation', name: 'Constellation', desc: '3D neural galaxy & connected starfield (dynamic web filaments)' },
+    { id: 'cyber-waves', name: 'Cyber Waves', desc: '3D undulating synthwave horizon terrain grid & wireframe ripples' },
+    { id: 'prism-crystals', name: 'Prism Crystals', desc: '3D tumbling glass geometric polyhedra with mouse parallax' },
+    { id: 'energy-helix', name: 'Energy Helix', desc: '3D dual particle ribbon vortex revolving in harmonic resonance' },
+    { id: 'floating-orbs', name: 'Floating Orbs', desc: '3D ethereal ambient luminous spheres with realistic lighting' },
+    { id: 'none', name: 'Minimal Canvas', desc: 'Lightweight 2D ambient aurora orbs' }
+  ];
+
   return (
     <div className="max-w-4xl space-y-10">
 
@@ -195,7 +236,7 @@ export default function AdminSettingsPage() {
 
       <form onSubmit={handleSaveAll} className="space-y-8">
 
-        {/* 1. VISUAL EFFECTS PANEL (Hero 3D, Presets, Intensity, Tilt) */}
+        {/* 1. 3D HERO SCENE PRESET BOX */}
         <div className="p-6 rounded-2xl border-2 border-primary/30 bg-card/90 space-y-6 shadow-sm">
           <div className="flex items-center justify-between pb-3 border-b border-border/50">
             <div className="flex items-center gap-2.5">
@@ -204,10 +245,10 @@ export default function AdminSettingsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground">
-                  3D Visual Effects Configuration
+                  3D Hero Scene Preset
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Control Three.js canvas rendering, presets, performance, and accessibility
+                  Choose the interactive 3D model rendered in the top Hero section of your portfolio
                 </p>
               </div>
             </div>
@@ -388,6 +429,72 @@ export default function AdminSettingsPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* 2. 3D BACKGROUND ANIMATION STYLE BOX */}
+        <div className="p-6 rounded-2xl border-2 border-primary/25 bg-card/90 space-y-6 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                <Layers className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  3D Background Animation Style
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Sets the default full-page 3D WebGL animation loaded behind your entire portfolio (Light & Dark Mode)
+                </p>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-bold capitalize">
+              {(visualEffects.backgroundPreset || 'constellation').replace('-', ' ')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {backgroundPresets.map((bgPreset) => {
+              const isSelected = (visualEffects.backgroundPreset || 'constellation') === bgPreset.id;
+              return (
+                <div
+                  key={bgPreset.id}
+                  onClick={() => setVisualEffects({ ...visualEffects, backgroundPreset: bgPreset.id })}
+                  className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40'
+                      : 'border-border/70 hover:border-primary/40 bg-secondary/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-foreground">{bgPreset.name}</span>
+                    {isSelected && (
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 leading-normal">
+                    {bgPreset.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3. 3D LIGHTING, ACCENTS & PERFORMANCE CONTROLS BOX */}
+        <div className="p-6 rounded-2xl border border-border/70 bg-card/80 space-y-6 shadow-sm">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-border/50">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <Sliders className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                3D Lighting, Motion & Performance Controls
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Tune 3D glow colors, animation float intensity, particle effects, and mobile rendering
+              </p>
+            </div>
+          </div>
 
           {/* Color & Intensity */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
@@ -453,12 +560,38 @@ export default function AdminSettingsPage() {
               label="Enable 3D on Mobile"
             />
           </div>
+        </div>
 
-          {/* Fallback Image */}
-          <div className="pt-2">
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Static Fallback Image (Shown when WebGL disabled or user prefers reduced motion)
+        {/* 4. HERO PHOTO BORDER & FRAMING STYLES BOX */}
+        <div className="p-6 rounded-2xl border border-border/70 bg-card/80 space-y-6 shadow-sm">
+          <div className="flex items-center justify-between pb-3 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                <Camera className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Hero Photo & Framing Style
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Upload your portrait photo and customize its border framing and ambient effects in the hero section
+                </p>
+              </div>
+            </div>
+
+            <span className="text-[10px] font-mono text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 font-semibold">
+              Applied to Hero Section
+            </span>
+          </div>
+
+          {/* Hero Portrait Photo Uploader */}
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Hero Portrait Photo
             </label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Shown in the Hero section and serves as the visual display for framing and 3D effects.
+            </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Input
                 placeholder="/uploads/fallback.png or https://..."
@@ -593,21 +726,17 @@ export default function AdminSettingsPage() {
             )}
           </div>
 
-          {/* ─── Hero Image Border & Visual Effect Preset ─────────────── */}
+          {/* Border Style Selector Grid — 6 presets */}
           <div className="pt-4 border-t border-border/50">
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Hero Photo Border Style
               </label>
-              <span className="text-[10px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                Applied to Uploaded Photo
-              </span>
             </div>
             <p className="text-xs text-muted-foreground mb-4">
               Select the border framing and ambient effects applied to your uploaded portrait in the hero section.
             </p>
 
-            {/* Border Style Selector Grid — 6 presets */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
               {[
                 {
@@ -925,13 +1054,32 @@ export default function AdminSettingsPage() {
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                Favicon URL
+                Favicon URL / Icon (.ico, .png, .svg)
               </label>
-              <Input
-                placeholder="/uploads/favicon.ico"
-                value={seo.favicon || ''}
-                onChange={(e) => setSeo({ ...seo, favicon: e.target.value })}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Input
+                  placeholder="/uploads/favicon.ico or .svg"
+                  value={seo.favicon || ''}
+                  onChange={(e) => setSeo({ ...seo, favicon: e.target.value })}
+                  style={{ flex: 1, minWidth: 0 }}
+                />
+                <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>or</span>
+                <input id="favicon-file" type="file" accept="image/*,.ico,.svg" style={{ display: 'none' }} onChange={handleFaviconUpload} />
+                <button type="button" title="Upload favicon from computer" disabled={faviconUploading}
+                  onClick={() => document.getElementById('favicon-file').click()}
+                  style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, border: '1.5px dashed var(--border)', background: faviconUploading ? 'var(--muted)' : 'transparent', color: faviconUploading ? 'var(--muted-foreground)' : 'var(--foreground)', fontSize: 12, fontWeight: 500, cursor: faviconUploading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', transition: 'background 0.2s' }}
+                  onMouseEnter={e => { if (!faviconUploading) e.currentTarget.style.background = 'var(--muted)'; }}
+                  onMouseLeave={e => { if (!faviconUploading) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  {faviconUploading ? <><span style={{ width: 13, height: 13, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Uploading…</> : <><Upload size={13} />Upload Favicon</>}
+                </button>
+              </div>
+              {seo.favicon && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <img src={getMediaUrl(seo.favicon)} alt="Favicon preview" onError={e => { e.currentTarget.style.display = 'none'; }} style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border)', background: '#0a0d14', padding: 2 }} />
+                  <span style={{ fontSize: 11, color: 'var(--muted-foreground)', wordBreak: 'break-all' }}>{seo.favicon}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

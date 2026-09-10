@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { api, getMediaUrl } from '@/lib/api';
 import { useTheme } from '@/lib/theme-provider';
 import {
   LayoutDashboard,
@@ -34,6 +34,7 @@ export default function AdminLayout({ children }) {
   const { theme, setTheme, mounted } = useTheme();
 
   const [admin, setAdmin] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -47,9 +48,16 @@ export default function AdminLayout({ children }) {
 
     const verifyAuth = async () => {
       try {
-        const res = await api.getMe();
-        if (res && res.success && res.admin) {
-          setAdmin(res.admin);
+        const [authRes, settingsRes] = await Promise.all([
+          api.getMe(),
+          api.getSettings().catch(() => null)
+        ]);
+
+        if (authRes && authRes.success && authRes.admin) {
+          setAdmin(authRes.admin);
+          if (settingsRes?.data) {
+            setSettings(settingsRes.data);
+          }
         } else {
           router.replace('/admin/login');
         }
@@ -61,6 +69,22 @@ export default function AdminLayout({ children }) {
     };
 
     verifyAuth();
+
+    // Listen for real-time setting updates triggered from profile or settings editors
+    const handleSettingsUpdate = (e) => {
+      if (e?.detail) {
+        setSettings((prev) => ({ ...prev, ...e.detail }));
+      } else {
+        api.getSettings().then((res) => {
+          if (res?.data) setSettings(res.data);
+        }).catch(() => {});
+      }
+    };
+
+    window.addEventListener('admin-settings-updated', handleSettingsUpdate);
+    return () => {
+      window.removeEventListener('admin-settings-updated', handleSettingsUpdate);
+    };
   }, [pathname, isLoginPage, router]);
 
   const handleLogout = async () => {
@@ -108,15 +132,39 @@ export default function AdminLayout({ children }) {
   // Breadcrumb segment title
   const currentNavItem = navItems.find((item) => item.href === pathname) || { label: 'Admin' };
 
+  const headerPhoto = settings?.profile?.adminLogoImage || settings?.profile?.profileImage || settings?.visualEffects?.fallbackImage || settings?.profile?.logoImage;
+  const headerTitle = settings?.profile?.adminTitle || settings?.profile?.logoText || 'Admin Console';
+
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 border-r border-border/70 bg-card/60 backdrop-blur-xl p-4 sticky top-0 h-screen overflow-y-auto">
         {/* Brand */}
         <div className="flex items-center justify-between px-3 py-3 mb-6 border-b border-border/50">
-          <Link href="/admin" className="font-bold text-lg tracking-tight flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-            <span>Admin Console</span>
+          <Link href="/admin" className="font-bold text-base tracking-tight flex items-center gap-2.5 min-w-0 group">
+            {headerPhoto ? (
+              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-primary/40 bg-primary/10 shadow-sm shrink-0 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all flex items-center justify-center">
+                <img
+                  src={getMediaUrl(headerPhoto)}
+                  alt={headerTitle}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="hidden w-full h-full items-center justify-center bg-primary/20 text-xs font-bold text-primary">
+                  {headerTitle ? headerTitle.charAt(0).toUpperCase() : 'A'}
+                </div>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+              </div>
+            )}
+            <span className="truncate font-bold text-foreground group-hover:text-primary transition-colors text-base" title={headerTitle}>
+              {headerTitle}
+            </span>
           </Link>
         </div>
 
@@ -232,11 +280,35 @@ export default function AdminLayout({ children }) {
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative w-72 bg-card border-r border-border p-5 flex flex-col z-50 h-full overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
-              <span className="font-bold text-base">Admin Console</span>
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {headerPhoto ? (
+                  <div className="relative w-7 h-7 rounded-full overflow-hidden border border-primary/40 bg-primary/10 shadow-sm shrink-0 ring-1 ring-primary/20 flex items-center justify-center">
+                    <img
+                      src={getMediaUrl(headerPhoto)}
+                      alt={headerTitle}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div className="hidden w-full h-full items-center justify-center bg-primary/20 text-[10px] font-bold text-primary">
+                      {headerTitle ? headerTitle.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+                    <span className="w-2 rounded-full bg-primary animate-pulse" />
+                  </div>
+                )}
+                <span className="font-bold text-base truncate text-foreground" title={headerTitle}>
+                  {headerTitle}
+                </span>
+              </div>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground shrink-0"
               >
                 <X className="h-5 w-5" />
               </button>
