@@ -18,6 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { MorphLoader } from '@/components/ui/BookLoader';
 
 export default function AdminMediaPage() {
   const toast = useToast();
@@ -184,9 +185,7 @@ export default function AdminMediaPage() {
 
       {/* Media Grid */}
       {loading ? (
-        <div className="py-20 text-center text-xs font-mono text-muted-foreground animate-pulse">
-          Scanning media library...
-        </div>
+        <MorphLoader label="Scanning media library..." />
       ) : filteredMedia.length === 0 ? (
         <div className="p-12 text-center rounded-2xl border border-dashed border-border text-muted-foreground">
           <UploadCloud className="h-10 w-10 mx-auto mb-3 opacity-40" />

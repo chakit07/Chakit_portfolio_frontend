@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Dialog from '@/components/ui/Dialog';
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, Award, ExternalLink, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { PencilLoader } from '@/components/ui/BookLoader';
 
 export default function AdminCertificationsPage() {
   const toast = useToast();
@@ -175,9 +176,7 @@ export default function AdminCertificationsPage() {
       {/* List */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Loading certifications...
-          </div>
+          <PencilLoader label="Loading certifications..." />
         ) : certs.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No certifications recorded. Click Add Certification to add credentials.

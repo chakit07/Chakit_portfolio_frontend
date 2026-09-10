@@ -23,6 +23,7 @@ import {
   ImageIcon,
   Sparkles
 } from 'lucide-react';
+import { PencilLoader } from '@/components/ui/BookLoader';
 import { useToast } from '@/components/ui/Toast';
 
 export default function AdminProjectsPage() {
@@ -370,9 +371,7 @@ export default function AdminProjectsPage() {
       {/* Projects List / Table */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Loading project records...
-          </div>
+          <PencilLoader label="Loading project records..." />
         ) : filteredProjects.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No projects found matching your query.

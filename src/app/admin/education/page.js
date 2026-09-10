@@ -9,6 +9,7 @@ import Dialog from '@/components/ui/Dialog';
 import Badge from '@/components/ui/Badge';
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, GraduationCap } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { PencilLoader } from '@/components/ui/BookLoader';
 
 export default function AdminEducationPage() {
   const toast = useToast();
@@ -161,9 +162,7 @@ export default function AdminEducationPage() {
       {/* List */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Loading education records...
-          </div>
+          <PencilLoader label="Loading education records..." />
         ) : records.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No education records recorded. Click Add Education to create one.

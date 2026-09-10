@@ -10,6 +10,7 @@ import Dialog from '@/components/ui/Dialog';
 import Badge from '@/components/ui/Badge';
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, Briefcase, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { PencilLoader } from '@/components/ui/BookLoader';
 
 export default function AdminExperiencePage() {
   const toast = useToast();
@@ -196,9 +197,7 @@ export default function AdminExperiencePage() {
       {/* Experience List */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Loading experience entries...
-          </div>
+          <PencilLoader label="Loading experience entries..." />
         ) : experience.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No work experience recorded. Click Add Experience to add your career history.

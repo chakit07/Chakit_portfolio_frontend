@@ -9,6 +9,7 @@ import Dialog from '@/components/ui/Dialog';
 import Badge from '@/components/ui/Badge';
 import { Plus, Edit, Trash2, ArrowUp, ArrowDown, Layers } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { PencilLoader } from '@/components/ui/BookLoader';
 
 export default function AdminSkillsPage() {
   const toast = useToast();
@@ -195,9 +196,7 @@ export default function AdminSkillsPage() {
       {/* Skills Table / List */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-16 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Loading skills...
-          </div>
+          <PencilLoader label="Loading skills..." />
         ) : skills.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No skills found. Click Add Skill to get started.

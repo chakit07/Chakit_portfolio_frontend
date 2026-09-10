@@ -21,6 +21,7 @@ import {
   Check
 } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
+import { MorphLoader } from '@/components/ui/BookLoader';
 
 export default function AdminMessagesPage() {
   const toast = useToast();
@@ -222,9 +223,7 @@ export default function AdminMessagesPage() {
       {/* Messages List */}
       <div className="rounded-2xl border border-border/70 bg-card/80 overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-20 text-center text-xs font-mono text-muted-foreground animate-pulse">
-            Checking inbox...
-          </div>
+          <MorphLoader label="Checking inbox..." />
         ) : messages.length === 0 ? (
           <div className="py-20 text-center text-sm text-muted-foreground">
             No messages found in this category.
