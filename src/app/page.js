@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { PageLoader } from '@/components/ui/BookLoader';
 import Navbar from '@/components/public/Navbar';
 import Hero from '@/components/public/Hero';
 import About from '@/components/public/About';
@@ -55,16 +56,7 @@ export default function HomePage() {
   }, [data, setBackgroundPreset, setAccentColor, setAnimationSpeed]);
 
   if (loading && !data) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="relative w-16 h-16 mb-4">
-          <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-        </div>
-        <p className="text-sm font-mono text-muted-foreground animate-pulse">
-          Loading portfolio...
-        </p>
-      </div>
-    );
+    return <PageLoader label="Loading portfolio..." />;
   }
 
   if (error && !data) {

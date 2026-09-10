@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { api, getMediaUrl } from '@/lib/api';
+import { PageLoader } from '@/components/ui/BookLoader';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import {
@@ -83,14 +84,7 @@ export default function ProjectDetailPage() {
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="w-12 h-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
-        <p className="text-sm font-mono text-muted-foreground animate-pulse">
-          Loading case study...
-        </p>
-      </div>
-    );
+    return <PageLoader label="Loading case study..." />;
   }
 
   if (error || !project) {

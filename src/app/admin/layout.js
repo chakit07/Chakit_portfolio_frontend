@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, getMediaUrl } from '@/lib/api';
 import { useTheme } from '@/lib/theme-provider';
+import { PageLoader } from '@/components/ui/BookLoader';
 import {
   LayoutDashboard,
   UserCheck,
@@ -104,14 +105,7 @@ export default function AdminLayout({ children }) {
   }
 
   if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-4" />
-        <p className="text-xs font-mono text-muted-foreground animate-pulse">
-          Verifying security session...
-        </p>
-      </div>
-    );
+    return <PageLoader label="Verifying security session..." />;
   }
 
   const navItems = [

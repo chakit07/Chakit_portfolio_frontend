@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import BookLoader from '@/components/ui/BookLoader';
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState(null);
@@ -45,11 +46,8 @@ export default function AdminOverviewPage() {
 
   if (loading) {
     return (
-      <div className="py-16 flex flex-col items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mb-3" />
-        <p className="text-xs font-mono text-muted-foreground animate-pulse">
-          Loading metrics...
-        </p>
+      <div className="py-20 flex flex-col items-center justify-center">
+        <BookLoader label="Loading metrics..." />
       </div>
     );
   }
