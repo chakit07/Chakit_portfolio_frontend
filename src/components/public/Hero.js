@@ -61,8 +61,49 @@ export default function Hero({ settings, socialLinks = [] }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[calc(100vh-10rem)]">
 
-          {/* Left Column: Accessible HTML Introduction & CTAs */}
-          <div className="lg:col-span-7 flex flex-col justify-center text-left z-10">
+          {/* 3D Interactive Visual Canvas / Profile Image (Top on mobile, Right on desktop) */}
+          <div className="lg:col-span-5 h-[360px] sm:h-[480px] lg:h-[550px] w-full flex items-center justify-center relative order-1 lg:order-2">
+            {visualEffects.enabled ? (
+              <ThreeHeroCanvas
+                preset={visualEffects.preset || 'laptop'}
+                accentColor={visualEffects.accentColor || '#6366f1'}
+                intensity={visualEffects.intensity || 1.0}
+                particles={visualEffects.particles !== false}
+                fallbackImage={getMediaUrl(visualEffects.fallbackImage)}
+                imageUrl={getMediaUrl(visualEffects.hologramImage || visualEffects.fallbackImage || profile.profileImage)}
+                enableOnMobile={Boolean(visualEffects.enableOnMobile)}
+              />
+            ) : visualEffects.fallbackImage ? (
+              <HeroFramedImage
+                src={getMediaUrl(visualEffects.fallbackImage)}
+                alt={profile.name || 'Hero Visual'}
+                accentColor={visualEffects.accentColor || '#6366f1'}
+                borderEffect={visualEffects.imageBorderEffect || 'glow-gradient'}
+                borderColor={visualEffects.borderColor || ''}
+                borderWidth={visualEffects.borderWidth || 2}
+                borderRadius={visualEffects.borderRadius || 'xl'}
+                cardTilt={visualEffects.cardTilt !== false}
+              />
+            ) : profile.profileImage ? (
+              <HeroFramedImage
+                src={getMediaUrl(profile.profileImage)}
+                alt={profile.name || 'Profile Picture'}
+                accentColor={visualEffects.accentColor || '#6366f1'}
+                borderEffect={visualEffects.imageBorderEffect || 'glow-gradient'}
+                borderColor={visualEffects.borderColor || ''}
+                borderWidth={visualEffects.borderWidth || 2}
+                borderRadius={visualEffects.borderRadius || 'xl'}
+                cardTilt={visualEffects.cardTilt !== false}
+              />
+            ) : (
+              <div className="w-64 h-64 rounded-3xl bg-gradient-to-tr from-primary/30 to-accent/30 border border-primary/20 flex items-center justify-center shadow-2xl">
+                <Sparkles className="h-16 w-16 text-primary animate-pulse" />
+              </div>
+            )}
+          </div>
+
+          {/* HTML Introduction & CTAs (Bottom on mobile, Left on desktop) */}
+          <div className="lg:col-span-7 flex flex-col justify-center text-left z-10 order-2 lg:order-1">
 
             {/* Availability Status Badge */}
             {profile.availabilityStatus && (
@@ -149,47 +190,6 @@ export default function Hero({ settings, socialLinks = [] }) {
                     );
                   })}
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Right Column: 3D Interactive Visual Canvas */}
-          <div className="lg:col-span-5 h-[420px] sm:h-[500px] lg:h-[550px] w-full flex items-center justify-center relative">
-            {visualEffects.enabled ? (
-              <ThreeHeroCanvas
-                preset={visualEffects.preset || 'laptop'}
-                accentColor={visualEffects.accentColor || '#6366f1'}
-                intensity={visualEffects.intensity || 1.0}
-                particles={visualEffects.particles !== false}
-                fallbackImage={getMediaUrl(visualEffects.fallbackImage)}
-                imageUrl={getMediaUrl(visualEffects.hologramImage || visualEffects.fallbackImage || profile.profileImage)}
-                enableOnMobile={Boolean(visualEffects.enableOnMobile)}
-              />
-            ) : visualEffects.fallbackImage ? (
-              <HeroFramedImage
-                src={getMediaUrl(visualEffects.fallbackImage)}
-                alt={profile.name || 'Hero Visual'}
-                accentColor={visualEffects.accentColor || '#6366f1'}
-                borderEffect={visualEffects.imageBorderEffect || 'glow-gradient'}
-                borderColor={visualEffects.borderColor || ''}
-                borderWidth={visualEffects.borderWidth || 2}
-                borderRadius={visualEffects.borderRadius || 'xl'}
-                cardTilt={visualEffects.cardTilt !== false}
-              />
-            ) : profile.profileImage ? (
-              <HeroFramedImage
-                src={getMediaUrl(profile.profileImage)}
-                alt={profile.name || 'Profile Picture'}
-                accentColor={visualEffects.accentColor || '#6366f1'}
-                borderEffect={visualEffects.imageBorderEffect || 'glow-gradient'}
-                borderColor={visualEffects.borderColor || ''}
-                borderWidth={visualEffects.borderWidth || 2}
-                borderRadius={visualEffects.borderRadius || 'xl'}
-                cardTilt={visualEffects.cardTilt !== false}
-              />
-            ) : (
-              <div className="w-64 h-64 rounded-3xl bg-gradient-to-tr from-primary/30 to-accent/30 border border-primary/20 flex items-center justify-center shadow-2xl">
-                <Sparkles className="h-16 w-16 text-primary animate-pulse" />
               </div>
             )}
           </div>
