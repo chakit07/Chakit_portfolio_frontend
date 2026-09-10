@@ -46,24 +46,12 @@ export default function FaviconHead() {
       try {
         let faviconUrl = null;
 
-        // Try authenticated settings first (if user is in admin)
+        // Use public endpoint so non-logged-in visitors don't trigger a 401 in browser console
         try {
-          const adminSettings = await api.getSettings();
-          if (adminSettings?.data?.seo?.favicon) {
-            faviconUrl = adminSettings.data.seo.favicon;
-          }
+          const publicData = await api.getPublicPortfolio();
+          faviconUrl = publicData?.data?.settings?.seo?.favicon;
         } catch {
-          // not authenticated as admin, continue to public check
-        }
-
-        // Try public portfolio if not found
-        if (!faviconUrl) {
-          try {
-            const publicData = await api.getPublicPortfolio();
-            faviconUrl = publicData?.data?.settings?.seo?.favicon;
-          } catch {
-            // ignore
-          }
+          // fallback
         }
 
         setBrowserFavicon(faviconUrl || '/favicon.svg');
